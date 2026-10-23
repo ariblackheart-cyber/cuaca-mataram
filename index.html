@@ -91,6 +91,13 @@ td.kd{font-family:var(--body);text-align:left}
 .weeks div{background:var(--accent-soft);border-radius:10px;padding:8px 10px}
 .weeks .v{font-size:14px}
 .weeks .r{font-family:var(--mono);font-size:12px;color:var(--rain)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:8px;-webkit-overflow-scrolling:touch}
+.chips button{flex:0 0 auto;border:1px solid var(--line);background:transparent;color:var(--fg);font:inherit;font-size:13px;padding:7px 12px;border-radius:999px;min-height:38px;cursor:pointer;line-height:1.15}
+.chips button small{display:block;font-size:11px;color:var(--muted)}
+.chips button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.chips button[aria-selected="true"] small{color:var(--panel);opacity:.8}
+details.more{margin-top:10px}
+details.more summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14px;padding:6px 0}
 footer{color:var(--muted);font-size:12px}
 footer a{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
@@ -114,10 +121,16 @@ footer a{color:var(--accent)}
     <div class="facts" id="nowFacts"></div>
   </section>
 
-  <section aria-labelledby="nextH">
-    <h2 id="nextH">24 jam ke depan</h2>
-    <p class="sub">Per 30 menit · geser ke samping</p>
+  <section aria-labelledby="nextH" class="full">
+    <h2 id="nextH">Prakiraan per 30 menit</h2>
+    <p class="sub">7 hari ke depan · pilih hari, lalu geser ke samping</p>
+    <div class="chips" id="chips" role="tablist" aria-label="Pilih hari"></div>
     <div class="strip" id="strip"><div class="empty">Memuat…</div></div>
+    <details class="more"><summary>Tabel lengkap hari ini</summary>
+      <div class="tbl"><table><thead><tr><th>Jam</th><th>Suhu</th><th>Terasa</th><th>Hujan</th><th>Peluang</th><th>Angin</th><th>Awan</th><th>Kondisi</th></tr></thead><tbody id="fBody"></tbody></table></div>
+    </details>
+    <div class="chart" id="fChart" style="margin-top:14px"></div>
+    <div class="btns" style="margin-top:12px"><a class="btn ghost" href="data/prakiraan-30menit.csv" download="cuaca-mataram-prakiraan-30menit.csv">Unduh CSV 7 hari</a></div>
   </section>
 
   <section aria-labelledby="dayH" class="full">
@@ -212,10 +225,22 @@ function renderNow(f){
   $("updated").textContent=isNaN(u)?"":`Diperbarui ${lbl(f.diperbarui.slice(0,16),true)} WITA`;
 }
 /* ---- 24 jam ---- */
+let fc=[],fDay=null;
+function dayKey(t){return t.slice(0,10)}
 function renderStrip(f){
-  const s=(f.per30menit||[]).slice(0,48);
-  if(!s.length){$("strip").innerHTML='<div class="empty">Belum ada prakiraan.</div>';return}
-  $("strip").innerHTML=s.map(r=>{const midnight=r.waktu_wita.slice(11)==="00:00";return `<div class="slot${midnight?" day0":""}"><div class="h">${midnight?HARI[new Date(ms(r.waktu_wita)+8*3600e3).getUTCDay()]:lbl(r.waktu_wita)}</div><div class="t">${n0(r.suhu_c)}°</div><div class="p">${r.peluang_hujan_pct!=null?r.peluang_hujan_pct+"%":""}</div></div>`}).join("");
+  fc=f.per30menit||[];
+  if(!fc.length){$("strip").innerHTML='<div class="empty">Belum ada prakiraan.</div>';return}
+  const days=[...new Set(fc.map(r=>dayKey(r.waktu_wita)))].slice(0,8);
+  if(!fDay||!days.includes(fDay))fDay=days[0];
+  const today=dayKey(new Date(Date.now()+8*3600e3).toISOString());
+  $("chips").innerHTML=days.map(d=>{const dt=new Date(d+"T12:00:00Z");return `<button type="button" role="tab" data-day="${d}" aria-selected="${d===fDay}">${d===today?"Hari ini":HARI[dt.getUTCDay()]}<small>${dt.getUTCDate()} ${BULAN[dt.getUTCMonth()]}</small></button>`}).join("");
+  $("chips").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{fDay=b.dataset.day;renderStrip({per30menit:fc});$("strip").scrollLeft=0}));
+  const s=fc.filter(r=>dayKey(r.waktu_wita)===fDay);
+  $("strip").innerHTML=s.map(r=>`<div class="slot"><div class="h">${lbl(r.waktu_wita)}</div><div class="t">${n0(r.suhu_c)}°</div><div class="p">${r.peluang_hujan_pct!=null?r.peluang_hujan_pct+"%":""}</div></div>`).join("");
+  $("fBody").innerHTML=s.map(r=>`<tr><td>${lbl(r.waktu_wita)}</td><td>${n1(r.suhu_c)}</td><td>${n1(r.terasa_c)}</td><td>${n1(r.hujan_mm)}</td><td>${r.peluang_hujan_pct??"–"}%</td><td>${n0(r.angin_kmh)} ${arah(r.arah_angin_deg)}</td><td>${n0(r.awan_pct)}</td><td class="kd">${esc(r.kondisi)}</td></tr>`).join("");
+  const dt=new Date(fDay+"T12:00:00Z");
+  document.querySelector("details.more summary").textContent=`Tabel lengkap ${fDay===today?"hari ini":HARI[dt.getUTCDay()]+" "+dt.getUTCDate()+" "+BULAN[dt.getUTCMonth()]}`;
+  drawChart(fc,"fChart",true);
 }
 /* ---- 7 hari ---- */
 function renderDays(f){
@@ -249,10 +274,11 @@ function downsample(data,max){
     out.push({waktu_wita:b[Math.floor(b.length/2)].waktu_wita,suhu_c:avg("suhu_c"),terasa_c:avg("terasa_c"),hujan_mm:b.reduce((a,r)=>a+(Number(r.hujan_mm)||0),0)})}
   return out;
 }
-function drawChart(all){
-  const data=downsample(all,$("chart").clientWidth<520?300:900);
+function drawChart(all,el,isFc){
+  el=el||"chart";
+  const data=downsample(all,$(el).clientWidth<520?300:900);
   const css=getComputedStyle(document.documentElement),c=k=>css.getPropertyValue(k).trim();
-  const narrow=$("chart").clientWidth<520;
+  const narrow=$(el).clientWidth<520;
   const W=narrow?380:900,H=narrow?240:260,L=34,R=10,T=22,B=26,pw=W-L-R,ph=H-T-B;
   const ts=data.map(r=>ms(r.waktu_wita));let t0=ts[0],t1=ts[ts.length-1];if(t1-t0<36e5){t0-=18e5;t1+=18e5}
   const vals=data.flatMap(r=>[Number(r.suhu_c),Number(r.terasa_c)]).filter(v=>!isNaN(v));
@@ -272,7 +298,7 @@ function drawChart(all){
   g+=line("terasa_c",c("--heat"),1.2,true)+line("suhu_c",c("--accent"),2,false);
   const last=data[data.length-1];if(last.suhu_c!=="")g+=`<circle cx="${x(ms(last.waktu_wita))}" cy="${y(Number(last.suhu_c))}" r="3.5" fill="${c("--accent")}"/>`;
   const leg=`<g font-family="IBM Plex Sans,sans-serif" font-size="${fs+1}" fill="${c("--fg")}"><rect x="${L}" y="5" width="12" height="3" fill="${c("--accent")}"/><text x="${L+16}" y="11">Suhu</text><rect x="${L+58}" y="5" width="12" height="3" fill="${c("--heat")}"/><text x="${L+74}" y="11">Terasa</text><rect x="${L+126}" y="2" width="8" height="8" fill="${c("--rain")}" opacity=".75"/><text x="${L+138}" y="11">Hujan (maks ${rmax.toFixed(1)} mm)</text></g>`;
-  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik suhu dan hujan">${leg}${g}</svg>`;
+  $(el).innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik suhu dan hujan">${leg}${g}</svg>`;
 }
 /* ---- Tren 30 hari ---- */
 let outlook=null;
@@ -312,8 +338,8 @@ $("dlRange").addEventListener("click",()=>{
   a.href=URL.createObjectURL(blob);a.download=`cuaca-mataram-${range?range+"hari":"semua"}-${n.getUTCFullYear()}${pad(n.getUTCMonth()+1)}${pad(n.getUTCDate())}.csv`;
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 });
-let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(rows.length)renderHistory();if(outlook)renderOutlook(outlook)},200)});
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(rows.length)renderHistory();if(outlook)renderOutlook(outlook)});
+let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(fc.length)drawChart(fc,"fChart",true);if(rows.length)renderHistory();if(outlook)renderOutlook(outlook)},200)});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(fc.length)drawChart(fc,"fChart",true);if(rows.length)renderHistory();if(outlook)renderOutlook(outlook)});
 
 async function load(){
   const bust="?t="+Math.floor(Date.now()/3e5);

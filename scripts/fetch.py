@@ -159,6 +159,12 @@ def main():
     }
     with open(FCST, "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, separators=(",", ":"))
+    cols = COLS[:5] + ["peluang_hujan_pct"] + COLS[5:]
+    with open(os.path.join(DATA, "prakiraan-30menit.csv"), "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=cols)
+        w.writeheader()
+        for r in out["per30menit"]:
+            w.writerow({k: ("" if r.get(k) is None else r.get(k)) for k in cols})
 
     print(f"riwayat: {len(hist)} baris, prakiraan: {len(out['per30menit'])} slot, {len(daily)} hari")
 
