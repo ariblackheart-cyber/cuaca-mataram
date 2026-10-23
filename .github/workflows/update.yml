@@ -22,6 +22,9 @@ jobs:
           python-version: "3.12"
       - name: Ambil data Open-Meteo
         run: python scripts/fetch.py
+      - name: Tren 30 hari (EC46)
+        continue-on-error: true
+        run: python scripts/outlook.py
       - name: Simpan perubahan
         run: |
           git config user.name "cuaca-bot"

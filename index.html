@@ -86,6 +86,11 @@ td{font-family:var(--mono);font-variant-numeric:tabular-nums}
 td.kd{font-family:var(--body);text-align:left}
 .empty{color:var(--muted);padding:16px;border:1px dashed var(--line);border-radius:10px;font-size:14px}
 .note{font-size:12px;color:var(--muted);margin:10px 0 0}
+.weeks{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+@media (min-width:560px){.weeks{grid-template-columns:repeat(4,1fr)}}
+.weeks div{background:var(--accent-soft);border-radius:10px;padding:8px 10px}
+.weeks .v{font-size:14px}
+.weeks .r{font-family:var(--mono);font-size:12px;color:var(--rain)}
 footer{color:var(--muted);font-size:12px}
 footer a{color:var(--accent)}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
@@ -119,6 +124,15 @@ footer a{color:var(--accent)}
     <h2 id="dayH">Prakiraan 7 hari</h2>
     <p class="sub">Suhu terendah–tertinggi, peluang dan jumlah hujan</p>
     <div class="days" id="days"><div class="empty">Memuat…</div></div>
+  </section>
+
+  <section aria-labelledby="olH" class="full">
+    <h2 id="olH">Tren 30 hari</h2>
+    <p class="sub" id="olSub">Prakiraan jangka panjang ECMWF EC46 · untuk melihat kecenderungan, bukan kepastian harian</p>
+    <div class="chart" id="olChart"><div class="empty">Memuat tren…</div></div>
+    <div class="weeks" id="olWeeks"></div>
+    <div class="btns" style="margin-top:12px"><a class="btn ghost" href="data/outlook.csv" download="cuaca-mataram-tren-30-hari.csv">Unduh CSV tren</a></div>
+    <p class="note">Batang suhu menunjukkan rata-rata terendah sampai tertinggi harian; area samar adalah sebaran 10–90% antar-anggota ensemble. Makin jauh harinya, makin lebar ketidakpastiannya.</p>
   </section>
 
   <section aria-labelledby="hisH" class="full">
@@ -260,6 +274,36 @@ function drawChart(all){
   const leg=`<g font-family="IBM Plex Sans,sans-serif" font-size="${fs+1}" fill="${c("--fg")}"><rect x="${L}" y="5" width="12" height="3" fill="${c("--accent")}"/><text x="${L+16}" y="11">Suhu</text><rect x="${L+58}" y="5" width="12" height="3" fill="${c("--heat")}"/><text x="${L+74}" y="11">Terasa</text><rect x="${L+126}" y="2" width="8" height="8" fill="${c("--rain")}" opacity=".75"/><text x="${L+138}" y="11">Hujan (maks ${rmax.toFixed(1)} mm)</text></g>`;
   $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik suhu dan hujan">${leg}${g}</svg>`;
 }
+/* ---- Tren 30 hari ---- */
+let outlook=null;
+function renderOutlook(o){
+  outlook=o;const d=(o&&o.harian)||[];
+  if(!d.length){$("olChart").innerHTML='<div class="empty">Tren 30 hari belum tersedia.</div>';return}
+  $("olSub").textContent=`${o.model||"ECMWF EC46"} · ${d[0].anggota||""} anggota ensemble · diperbarui ${lbl(o.diperbarui.slice(0,16),true)} WITA`;
+  const css=getComputedStyle(document.documentElement),c=k=>css.getPropertyValue(k).trim();
+  const narrow=$("olChart").clientWidth<520;
+  const W=narrow?380:900,H=narrow?250:270,L=34,R=10,T=22,B=26,pw=W-L-R,ph=H-T-B,rainH=ph*.28,tH=ph-rainH-8;
+  const lo=Math.floor(Math.min(...d.map(x=>x.min_c_p10??x.min_c))-1),hi=Math.ceil(Math.max(...d.map(x=>x.maks_c_p90??x.maks_c))+1);
+  const rmax=Math.max(5,...d.map(x=>x.hujan_mm||0));
+  const step=pw/d.length,xc=i=>L+step*(i+.5),y=v=>T+(hi-v)/(hi-lo)*tH,ry=v=>T+ph-(v/rmax)*rainH;
+  const fs=narrow?10:11,mono=`font-family="IBM Plex Mono,monospace" font-size="${fs}"`;
+  let g="";const st=Math.max(1,Math.ceil((hi-lo)/4));
+  for(let v=lo;v<=hi;v+=st)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${c("--line")}"/><text x="${L-5}" y="${y(v)+4}" text-anchor="end" fill="${c("--muted")}" ${mono}>${v}°</text>`;
+  g+=`<line x1="${L}" x2="${W-R}" y1="${T+ph}" y2="${T+ph}" stroke="${c("--line")}"/>`;
+  const bw=Math.max(3,step*.55);
+  d.forEach((x,i)=>{
+    if(x.min_c_p10!=null)g+=`<rect x="${xc(i)-bw/2}" y="${y(x.maks_c_p90)}" width="${bw}" height="${Math.max(1,y(x.min_c_p10)-y(x.maks_c_p90))}" rx="${bw/2}" fill="${c("--accent")}" opacity=".14"/>`;
+    g+=`<rect x="${xc(i)-bw/4}" y="${y(x.maks_c)}" width="${bw/2}" height="${Math.max(1,y(x.min_c)-y(x.maks_c))}" rx="${bw/4}" fill="${c("--heat")}" opacity=".85"/>`;
+    if(x.hujan_mm>0)g+=`<rect x="${xc(i)-bw/2}" y="${ry(x.hujan_mm)}" width="${bw}" height="${T+ph-ry(x.hujan_mm)}" fill="${c("--rain")}" opacity=".75"/>`;
+    const dt=new Date(x.tanggal+"T12:00:00Z");
+    if(i%7===0)g+=`<text x="${xc(i)}" y="${H-8}" text-anchor="${i===0?"start":"middle"}" fill="${c("--muted")}" ${mono}>${dt.getUTCDate()} ${BULAN[dt.getUTCMonth()]}</text>`;
+  });
+  const leg=`<g font-family="IBM Plex Sans,sans-serif" font-size="${fs+1}" fill="${c("--fg")}"><rect x="${L}" y="2" width="6" height="10" rx="3" fill="${c("--heat")}"/><text x="${L+10}" y="11">Suhu min–maks</text><rect x="${L+104}" y="2" width="10" height="10" rx="3" fill="${c("--accent")}" opacity=".25"/><text x="${L+118}" y="11">Sebaran</text><rect x="${L+172}" y="2" width="8" height="10" fill="${c("--rain")}" opacity=".75"/><text x="${L+184}" y="11">Hujan (skala ${Math.round(rmax)} mm)</text></g>`;
+  $("olChart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik tren suhu dan hujan 30 hari">${leg}${g}</svg>`;
+  const weeks=[];for(let i=0;i<d.length;i+=7)weeks.push(d.slice(i,i+7));
+  $("olWeeks").innerHTML=weeks.slice(0,4).map((w,k)=>{const a=new Date(w[0].tanggal+"T12:00:00Z"),b=new Date(w[w.length-1].tanggal+"T12:00:00Z");const rain=w.reduce((s,x)=>s+(x.hujan_mm||0),0);const wet=w.filter(x=>(x.peluang_hujan_pct||0)>=50).length;
+    return `<div><div class="k">Minggu ${k+1} · ${a.getUTCDate()}${a.getUTCMonth()!==b.getUTCMonth()?" "+BULAN[a.getUTCMonth()]:""}–${b.getUTCDate()} ${BULAN[b.getUTCMonth()]}</div><div class="v">${n0(Math.min(...w.map(x=>x.min_c)))}–${n0(Math.max(...w.map(x=>x.maks_c)))}°</div><div class="r">${rain.toFixed(0)} mm · ${wet} hari basah</div></div>`}).join("");
+}
 document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{range=Number(b.dataset.d);document.querySelectorAll(".seg button").forEach(o=>o.setAttribute("aria-pressed",String(o===b)));renderHistory()}));
 $("dlRange").addEventListener("click",()=>{
   const data=filtered();if(!data.length)return;
@@ -268,13 +312,15 @@ $("dlRange").addEventListener("click",()=>{
   a.href=URL.createObjectURL(blob);a.download=`cuaca-mataram-${range?range+"hari":"semua"}-${n.getUTCFullYear()}${pad(n.getUTCMonth()+1)}${pad(n.getUTCDate())}.csv`;
   document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
 });
-let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(rows.length)renderHistory()},200)});
-matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(rows.length)renderHistory()});
+let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(rows.length)renderHistory();if(outlook)renderOutlook(outlook)},200)});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(rows.length)renderHistory();if(outlook)renderOutlook(outlook)});
 
 async function load(){
   const bust="?t="+Math.floor(Date.now()/3e5);
   try{const f=await (await fetch("data/forecast.json"+bust,{cache:"no-store"})).json();renderNow(f);renderStrip(f);renderDays(f)}
   catch(e){$("updated").textContent="Data prakiraan belum tersedia. Jalankan workflow sekali dulu."}
+  try{const o=await (await fetch("data/outlook.json"+bust,{cache:"no-store"})).json();renderOutlook(o)}
+  catch(e){$("olChart").innerHTML='<div class="empty">Tren 30 hari belum tersedia.</div>'}
   try{const txt=await (await fetch("data/history.csv"+bust,{cache:"no-store"})).text();rows=parseCSV(txt).filter(r=>r.waktu_wita);renderHistory()}
   catch(e){$("chart").innerHTML='<div class="empty">Riwayat belum tersedia.</div>'}
 }
