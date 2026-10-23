@@ -1,0 +1,39 @@
+name: Isi riwayat lama
+
+on:
+  workflow_dispatch:
+    inputs:
+      mulai:
+        description: "Isi riwayat mulai tanggal (YYYY-MM-DD)"
+        default: "2023-01-01"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ambil data historis Open-Meteo
+        run: python scripts/backfill.py "${{ inputs.mulai }}"
+      - name: Simpan perubahan
+        run: |
+          git config user.name "cuaca-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+          else
+            git commit -m "Isi riwayat cuaca mulai ${{ inputs.mulai }}"
+            git pull --rebase origin main
+            git push
+          fi

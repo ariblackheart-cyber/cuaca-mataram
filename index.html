@@ -129,6 +129,7 @@ footer a{color:var(--accent)}
         <button type="button" data-d="1" aria-pressed="false">24 jam</button>
         <button type="button" data-d="7" aria-pressed="true">7 hari</button>
         <button type="button" data-d="30" aria-pressed="false">30 hari</button>
+        <button type="button" data-d="365" aria-pressed="false">1 tahun</button>
         <button type="button" data-d="0" aria-pressed="false">Semua</button>
       </div>
       <div class="btns">
@@ -227,7 +228,15 @@ function renderHistory(){
   $("tbody").innerHTML=show.map(r=>`<tr><td>${lbl(r.waktu_wita,true)}</td><td>${n1(r.suhu_c)}</td><td>${n1(r.terasa_c)}</td><td>${n0(r.kelembapan_pct)}</td><td>${n1(r.hujan_mm)}</td><td>${n0(r.angin_kmh)} ${arah(r.arah_angin_deg)}</td><td>${n0(r.awan_pct)}</td><td>${n0(r.tekanan_hpa)}</td><td class="kd">${esc(r.kondisi)}</td></tr>`).join("");
   $("hisSub").textContent=`${data.length} catatan${data.length>500?" · tabel menampilkan 500 terbaru":""}`;
 }
-function drawChart(data){
+function downsample(data,max){
+  if(data.length<=max)return data;
+  const size=Math.ceil(data.length/max),out=[];
+  for(let i=0;i<data.length;i+=size){const b=data.slice(i,i+size);const avg=k=>{const v=b.filter(r=>r[k]!==""&&r[k]!=null).map(r=>Number(r[k])).filter(x=>!isNaN(x));return v.length?(v.reduce((a,c)=>a+c,0)/v.length).toFixed(2):""};
+    out.push({waktu_wita:b[Math.floor(b.length/2)].waktu_wita,suhu_c:avg("suhu_c"),terasa_c:avg("terasa_c"),hujan_mm:b.reduce((a,r)=>a+(Number(r.hujan_mm)||0),0)})}
+  return out;
+}
+function drawChart(all){
+  const data=downsample(all,$("chart").clientWidth<520?300:900);
   const css=getComputedStyle(document.documentElement),c=k=>css.getPropertyValue(k).trim();
   const narrow=$("chart").clientWidth<520;
   const W=narrow?380:900,H=narrow?240:260,L=34,R=10,T=22,B=26,pw=W-L-R,ph=H-T-B;

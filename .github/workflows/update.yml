@@ -31,5 +31,6 @@ jobs:
             echo "Tidak ada perubahan."
           else
             git commit -m "Data cuaca $(TZ=Asia/Makassar date '+%Y-%m-%d %H:%M') WITA"
+            git pull --rebase origin main
             git push
           fi
