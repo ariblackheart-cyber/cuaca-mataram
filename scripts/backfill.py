@@ -29,10 +29,17 @@ def get(params):
                 return json.load(r)
         except urllib.error.HTTPError as e:
             body = e.read().decode("utf-8", "replace")[:300]
+            print(f"::warning::HTTP {e.code} {params.get('start_date')}: {body}", flush=True)
             if e.code in (429, 500, 502, 503) and attempt < 3:
-                time.sleep(20 * (attempt + 1))
+                time.sleep(30 * (attempt + 1))
                 continue
             raise RuntimeError(f"HTTP {e.code}: {body}") from e
+        except Exception as e:  # timeout / koneksi putus
+            print(f"::warning::{type(e).__name__} {params.get('start_date')}: {e}", flush=True)
+            if attempt < 3:
+                time.sleep(30 * (attempt + 1))
+                continue
+            raise
 
 
 def rows_for(start, end):
@@ -81,24 +88,33 @@ def main():
         print("Riwayat sudah mencakup tanggal itu.")
         return
 
-    added, cur = 0, start
+    added, cur, failed = 0, start, []
     while cur <= end_all:
-        stop = min(cur + timedelta(days=89), end_all)  # potongan ±3 bulan
-        chunk = rows_for(cur, stop)
+        stop = min(cur + timedelta(days=30), end_all)  # potongan ±1 bulan
+        try:
+            chunk = rows_for(cur, stop)
+        except Exception as e:
+            failed.append(f"{cur}..{stop}")
+            print(f"::error::Gagal {cur} s/d {stop}: {e}", flush=True)
+            cur = stop + timedelta(days=1)
+            continue
         for t, r in chunk.items():
             if t not in hist:
                 hist[t] = r
                 added += 1
         print(f"{cur} s/d {stop}: {len(chunk)} slot")
         cur = stop + timedelta(days=1)
-        time.sleep(2)
+        time.sleep(5)
 
     with open(fetch.HIST, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=fetch.COLS)
         w.writeheader()
         for t in sorted(hist):
             w.writerow({k: ("" if hist[t].get(k) is None else hist[t].get(k)) for k in fetch.COLS})
-    print(f"Ditambahkan {added} baris. Total {len(hist)} baris, mulai {min(hist)}.")
+    msg = f"Ditambahkan {added} baris. Total {len(hist)} baris, mulai {min(hist)}."
+    if failed:
+        msg += " Gagal: " + ", ".join(failed)
+    print(f"::notice::{msg}", flush=True)
 
 
 if __name__ == "__main__":
