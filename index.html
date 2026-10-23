@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f3f6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0d171c" media="(prefers-color-scheme: dark)">
+<title>Cuaca Mataram</title>
+<meta name="description" content="Riwayat cuaca per 30 menit dan prakiraan 7 hari untuk Mataram, Lombok.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Mobile-first: satu kolom kartu bertumpuk; di layar lebar jadi dua kolom */
+:root{
+  --bg:#f3f6f7; --panel:#ffffff; --fg:#14232b; --muted:#5b6d76; --line:#d9e2e6;
+  --accent:#0b6a86; --accent-soft:#e1eff3; --rain:#3b7fd1; --heat:#d2553a; --cool:#4a90a8;
+  --display:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;
+  --body:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0d171c; --panel:#132229; --fg:#e4edf0; --muted:#93a8b1; --line:#24363e;
+  --accent:#4fb6d3; --accent-soft:#16323b; --rain:#6aa6ec; --heat:#f07a5f; --cool:#7cc0d6; color-scheme:dark}}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;
+  padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(40px,env(safe-area-inset-bottom));
+  padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));
+  display:grid;gap:14px}
+@media (min-width:860px){.wrap{grid-template-columns:1fr 1fr}.full{grid-column:1/-1}}
+header{display:grid;gap:2px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,8vw,40px);line-height:1.05;margin:0}
+.meta{color:var(--muted);font-size:13px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0}
+h2{font-family:var(--display);font-weight:500;font-size:19px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:13px;margin:0 0 12px}
+.now{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.temp{font-family:var(--display);font-weight:700;font-size:60px;line-height:1;color:var(--accent)}
+.temp small{font-size:22px;color:var(--muted);font-weight:500}
+.cond{font-weight:600;font-size:18px}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 12px;margin-top:14px}
+@media (min-width:480px){.facts{grid-template-columns:repeat(4,1fr)}}
+.k{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.v{font-family:var(--mono);font-size:15px}
+.strip{display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:6px;margin:0 -4px;padding-inline:4px;-webkit-overflow-scrolling:touch}
+.slot{flex:0 0 58px;scroll-snap-align:start;text-align:center;border-radius:10px;padding:8px 2px;background:var(--accent-soft)}
+.slot .h{font-size:11px;color:var(--muted)}
+.slot .t{font-family:var(--mono);font-size:15px;font-weight:500}
+.slot .p{font-size:11px;color:var(--rain);font-family:var(--mono)}
+.slot.day0{background:transparent;border:1px dashed var(--line)}
+.days{display:grid;gap:2px}
+.day{display:grid;grid-template-columns:64px 1fr auto;gap:4px 10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.day:last-child{border-bottom:0}
+.dn{font-weight:600;font-size:14px;line-height:1.2}
+.dn small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.dc{font-size:13px;min-width:0}
+.range{display:flex;align-items:center;gap:6px;margin-top:4px}
+.range .lo,.range .hi{font-family:var(--mono);font-size:13px;width:30px}
+.range .lo{color:var(--muted);text-align:right}.range .hi{color:var(--heat)}
+.track{flex:1;height:6px;border-radius:3px;background:var(--accent-soft);position:relative}
+.track i{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,var(--cool),var(--heat))}
+.dr{text-align:right;font-family:var(--mono);font-size:12px;color:var(--rain);line-height:1.3}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:1 1 260px}
+.seg button{flex:1;border:0;background:transparent;color:var(--fg);font:inherit;font-size:13px;padding:9px 4px;cursor:pointer;min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--panel);font-weight:600}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;border:1px solid var(--accent);background:var(--accent);color:var(--panel);font:inherit;font-weight:600;font-size:14px;padding:8px 14px;border-radius:10px;text-decoration:none;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+@media (min-width:560px){.stats{grid-template-columns:repeat(4,1fr)}}
+.stats div{background:var(--accent-soft);border-radius:10px;padding:8px}
+.stats .v{font-size:14px}
+.chart svg{display:block;width:100%;height:auto}
+.tbl{overflow:auto;max-height:340px;margin-top:12px;border:1px solid var(--line);border-radius:10px;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+th{position:sticky;top:0;background:var(--panel);color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel)}
+th:first-child{z-index:1}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+td.kd{font-family:var(--body);text-align:left}
+.empty{color:var(--muted);padding:16px;border:1px dashed var(--line);border-radius:10px;font-size:14px}
+.note{font-size:12px;color:var(--muted);margin:10px 0 0}
+footer{color:var(--muted);font-size:12px}
+footer a{color:var(--accent)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="full">
+    <h1>Cuaca Mataram</h1>
+    <div class="meta">Lombok, NTB · <span class="mono">8,58° LS 116,12° BT</span> · WITA</div>
+    <div class="meta" id="updated">Memuat data…</div>
+  </header>
+
+  <section aria-labelledby="nowH">
+    <h2 id="nowH">Sekarang</h2>
+    <p class="sub" id="nowSub">Slot 30 menit terakhir</p>
+    <div class="now">
+      <div class="temp mono" id="nowTemp">–<small>°C</small></div>
+      <div><div class="cond" id="nowCond">–</div><div class="meta" id="nowFeel"></div></div>
+    </div>
+    <div class="facts" id="nowFacts"></div>
+  </section>
+
+  <section aria-labelledby="nextH">
+    <h2 id="nextH">24 jam ke depan</h2>
+    <p class="sub">Per 30 menit · geser ke samping</p>
+    <div class="strip" id="strip"><div class="empty">Memuat…</div></div>
+  </section>
+
+  <section aria-labelledby="dayH" class="full">
+    <h2 id="dayH">Prakiraan 7 hari</h2>
+    <p class="sub">Suhu terendah–tertinggi, peluang dan jumlah hujan</p>
+    <div class="days" id="days"><div class="empty">Memuat…</div></div>
+  </section>
+
+  <section aria-labelledby="hisH" class="full">
+    <h2 id="hisH">Riwayat per 30 menit</h2>
+    <p class="sub" id="hisSub">Data Open-Meteo, disimpan otomatis setiap 30 menit</p>
+    <div class="toolbar">
+      <div class="seg" role="group" aria-label="Rentang waktu">
+        <button type="button" data-d="1" aria-pressed="false">24 jam</button>
+        <button type="button" data-d="7" aria-pressed="true">7 hari</button>
+        <button type="button" data-d="30" aria-pressed="false">30 hari</button>
+        <button type="button" data-d="0" aria-pressed="false">Semua</button>
+      </div>
+      <div class="btns">
+        <button type="button" class="btn" id="dlRange">Unduh CSV rentang ini</button>
+        <a class="btn ghost" href="data/history.csv" download="cuaca-mataram-semua.csv">CSV lengkap</a>
+      </div>
+    </div>
+    <div class="stats" id="stats"></div>
+    <div class="chart" id="chart"></div>
+    <div class="tbl" id="tblWrap" hidden>
+      <table>
+        <thead><tr><th>Waktu</th><th>Suhu</th><th>Terasa</th><th>Lembap</th><th>Hujan</th><th>Angin</th><th>Awan</th><th>Tekanan</th><th>Kondisi</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="note">Satuan: °C, %, mm per 30 menit, km/jam, hPa. Nilai per 30 menit untuk wilayah Lombok berasal dari model cuaca (sebagian hasil interpolasi), bukan stasiun pengamatan.</p>
+  </section>
+
+  <footer class="full">Data cuaca dari <a href="https://open-meteo.com/" rel="noopener">Open-Meteo</a> (CC BY 4.0).</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const ARAH=["U","TL","T","TG","S","BD","B","BL"];
+const arah=deg=>deg===""||deg==null||isNaN(deg)?"":ARAH[Math.round(Number(deg)/45)%8];
+const n1=v=>v===""||v==null||isNaN(v)?"–":Number(v).toFixed(1);
+const n0=v=>v===""||v==null||isNaN(v)?"–":Math.round(Number(v));
+const HARI=["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+const BULAN=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
+// waktu_wita "2026-10-23T19:30" → milidetik (anggap UTC+8)
+const ms=t=>Date.parse(t+":00+08:00");
+const nowWita=()=>new Date(Date.now()+8*3600e3);
+function lbl(t,withDate){const d=new Date(ms(t)+8*3600e3);const hm=`${pad(d.getUTCHours())}.${pad(d.getUTCMinutes())}`;return withDate?`${pad(d.getUTCDate())} ${BULAN[d.getUTCMonth()]} ${hm}`:hm}
+
+let rows=[], range=7;
+
+/* ---- CSV ---- */
+function parseCSV(text){
+  const lines=text.replace(/^﻿/,"").trim().split(/\r?\n/);
+  const head=lines.shift().split(",");
+  return lines.map(l=>{const out=[];let cur="",q=false;for(let i=0;i<l.length;i++){const c=l[i];if(q){if(c==='"'){if(l[i+1]==='"'){cur+='"';i++}else q=false}else cur+=c}else if(c===","){out.push(cur);cur=""}else if(c==='"')q=true;else cur+=c}out.push(cur);const o={};head.forEach((h,i)=>o[h]=out[i]===undefined?"":out[i]);return o});
+}
+function toCSV(list){
+  if(!list.length)return"";
+  const cols=Object.keys(list[0]);
+  const q=v=>{const s=v==null?"":String(v);return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s};
+  return "﻿"+[cols.join(","),...list.map(r=>cols.map(c=>q(r[c])).join(","))].join("\n");
+}
+
+/* ---- Sekarang ---- */
+function renderNow(f){
+  const c=f.terkini; if(!c)return;
+  $("nowTemp").innerHTML=`${n1(c.suhu_c)}<small>°C</small>`;
+  $("nowCond").textContent=c.kondisi||"–";
+  $("nowFeel").textContent=`Terasa ${n1(c.terasa_c)} °C`;
+  $("nowSub").textContent=`Slot ${lbl(c.waktu_wita)} WITA`;
+  const today=f.harian&&f.harian[0];
+  const facts=[["Lembap",`${n0(c.kelembapan_pct)}%`],["Angin",`${n0(c.angin_kmh)} km/j ${arah(c.arah_angin_deg)}`],["Hembusan",`${n0(c.hembusan_kmh)} km/j`],["Awan",`${n0(c.awan_pct)}%`],["Tekanan",`${n0(c.tekanan_hpa)} hPa`],["Hujan",`${n1(c.hujan_mm)} mm`]];
+  if(today){facts.push(["UV maks",n1(today.uv_maks)],["Terbit",today.matahari_terbit.replace(":",".")],["Terbenam",today.matahari_terbenam.replace(":",".")])}
+  $("nowFacts").innerHTML=facts.map(x=>`<div><div class="k">${x[0]}</div><div class="v">${esc(x[1])}</div></div>`).join("");
+  const u=new Date(f.diperbarui);
+  $("updated").textContent=isNaN(u)?"":`Diperbarui ${lbl(f.diperbarui.slice(0,16),true)} WITA`;
+}
+/* ---- 24 jam ---- */
+function renderStrip(f){
+  const s=(f.per30menit||[]).slice(0,48);
+  if(!s.length){$("strip").innerHTML='<div class="empty">Belum ada prakiraan.</div>';return}
+  $("strip").innerHTML=s.map(r=>{const midnight=r.waktu_wita.slice(11)==="00:00";return `<div class="slot${midnight?" day0":""}"><div class="h">${midnight?HARI[new Date(ms(r.waktu_wita)+8*3600e3).getUTCDay()]:lbl(r.waktu_wita)}</div><div class="t">${n0(r.suhu_c)}°</div><div class="p">${r.peluang_hujan_pct!=null?r.peluang_hujan_pct+"%":""}</div></div>`}).join("");
+}
+/* ---- 7 hari ---- */
+function renderDays(f){
+  const d=f.harian||[]; if(!d.length)return;
+  const lo=Math.min(...d.map(x=>x.min_c)), hi=Math.max(...d.map(x=>x.maks_c)), span=Math.max(1,hi-lo);
+  const today=`${nowWita().getUTCFullYear()}-${pad(nowWita().getUTCMonth()+1)}-${pad(nowWita().getUTCDate())}`;
+  $("days").innerHTML=d.map(x=>{const dt=new Date(x.tanggal+"T12:00:00Z");
+    return `<div class="day"><div class="dn">${x.tanggal===today?"Hari ini":HARI[dt.getUTCDay()]}<small>${dt.getUTCDate()} ${BULAN[dt.getUTCMonth()]}</small></div>
+    <div class="dc">${esc(x.kondisi)}<div class="range"><span class="lo">${n0(x.min_c)}°</span><span class="track"><i style="left:${(x.min_c-lo)/span*100}%;right:${(hi-x.maks_c)/span*100}%"></i></span><span class="hi">${n0(x.maks_c)}°</span></div></div>
+    <div class="dr">${x.peluang_hujan_pct!=null?x.peluang_hujan_pct+"%":""}<br>${n1(x.hujan_mm)} mm</div></div>`}).join("");
+}
+/* ---- Riwayat ---- */
+function filtered(){if(!range)return rows;const cut=Date.now()-range*864e5;return rows.filter(r=>ms(r.waktu_wita)>=cut)}
+function renderHistory(){
+  const data=filtered();
+  $("dlRange").disabled=!data.length;
+  if(!data.length){$("chart").innerHTML='<div class="empty">Belum ada data pada rentang ini.</div>';$("stats").innerHTML="";$("tblWrap").hidden=true;return}
+  const t=data.map(r=>Number(r.suhu_c)).filter(v=>!isNaN(v));
+  const rain=data.reduce((a,r)=>a+(Number(r.hujan_mm)||0),0);
+  $("stats").innerHTML=[["Maks",`${Math.max(...t).toFixed(1)}°`],["Min",`${Math.min(...t).toFixed(1)}°`],["Rata-rata",`${(t.reduce((a,b)=>a+b,0)/t.length).toFixed(1)}°`],["Total hujan",`${rain.toFixed(1)} mm`]].map(x=>`<div><div class="k">${x[0]}</div><div class="v">${x[1]}</div></div>`).join("");
+  drawChart(data);
+  $("tblWrap").hidden=false;
+  const show=data.slice(-500).reverse();
+  $("tbody").innerHTML=show.map(r=>`<tr><td>${lbl(r.waktu_wita,true)}</td><td>${n1(r.suhu_c)}</td><td>${n1(r.terasa_c)}</td><td>${n0(r.kelembapan_pct)}</td><td>${n1(r.hujan_mm)}</td><td>${n0(r.angin_kmh)} ${arah(r.arah_angin_deg)}</td><td>${n0(r.awan_pct)}</td><td>${n0(r.tekanan_hpa)}</td><td class="kd">${esc(r.kondisi)}</td></tr>`).join("");
+  $("hisSub").textContent=`${data.length} catatan${data.length>500?" · tabel menampilkan 500 terbaru":""}`;
+}
+function drawChart(data){
+  const css=getComputedStyle(document.documentElement),c=k=>css.getPropertyValue(k).trim();
+  const narrow=$("chart").clientWidth<520;
+  const W=narrow?380:900,H=narrow?240:260,L=34,R=10,T=22,B=26,pw=W-L-R,ph=H-T-B;
+  const ts=data.map(r=>ms(r.waktu_wita));let t0=ts[0],t1=ts[ts.length-1];if(t1-t0<36e5){t0-=18e5;t1+=18e5}
+  const vals=data.flatMap(r=>[Number(r.suhu_c),Number(r.terasa_c)]).filter(v=>!isNaN(v));
+  const lo=Math.floor(Math.min(...vals)-1),hi=Math.ceil(Math.max(...vals)+1);
+  const rmax=Math.max(1,...data.map(r=>Number(r.hujan_mm)||0));
+  const x=t=>L+(t-t0)/(t1-t0)*pw,y=v=>T+(hi-v)/(hi-lo)*ph,yr=v=>T+ph-(v/rmax)*ph*.4;
+  const fs=narrow?10:11,mono=`font-family="IBM Plex Mono,monospace" font-size="${fs}"`;
+  let g="";const step=Math.max(1,Math.ceil((hi-lo)/4));
+  for(let v=lo;v<=hi;v+=step)g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="${c("--line")}"/><text x="${L-5}" y="${y(v)+4}" text-anchor="end" fill="${c("--muted")}" ${mono}>${v}°</text>`;
+  const nT=narrow?3:5,span=t1-t0;
+  for(let i=0;i<=nT;i++){const tt=t0+span*i/nT,d=new Date(tt+8*3600e3);const lab=span>2*864e5?`${d.getUTCDate()} ${BULAN[d.getUTCMonth()]}`:`${pad(d.getUTCHours())}.${pad(d.getUTCMinutes())}`;g+=`<text x="${x(tt)}" y="${H-8}" text-anchor="${i===0?"start":i===nT?"end":"middle"}" fill="${c("--muted")}" ${mono}>${lab}</text>`}
+  const bw=Math.max(1,Math.min(8,pw/data.length*.7));
+  data.forEach(r=>{const v=Number(r.hujan_mm);if(v>0)g+=`<rect x="${x(ms(r.waktu_wita))-bw/2}" y="${yr(v)}" width="${bw}" height="${T+ph-yr(v)}" fill="${c("--rain")}" opacity=".75"/>`});
+  const line=(k,col,w,dash)=>{const p=data.filter(r=>r[k]!==""&&!isNaN(r[k])).map(r=>`${x(ms(r.waktu_wita)).toFixed(1)},${y(Number(r[k])).toFixed(1)}`);return p.length?`<polyline points="${p.join(" ")}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linejoin="round" ${dash?'stroke-dasharray="3 3"':""}/>`:""};
+  const area=data.filter(r=>r.suhu_c!=="").map(r=>`${x(ms(r.waktu_wita)).toFixed(1)},${y(Number(r.suhu_c)).toFixed(1)}`);
+  if(area.length>1)g+=`<polygon points="${area[0].split(",")[0]},${T+ph} ${area.join(" ")} ${area[area.length-1].split(",")[0]},${T+ph}" fill="${c("--accent")}" opacity=".08"/>`;
+  g+=line("terasa_c",c("--heat"),1.2,true)+line("suhu_c",c("--accent"),2,false);
+  const last=data[data.length-1];if(last.suhu_c!=="")g+=`<circle cx="${x(ms(last.waktu_wita))}" cy="${y(Number(last.suhu_c))}" r="3.5" fill="${c("--accent")}"/>`;
+  const leg=`<g font-family="IBM Plex Sans,sans-serif" font-size="${fs+1}" fill="${c("--fg")}"><rect x="${L}" y="5" width="12" height="3" fill="${c("--accent")}"/><text x="${L+16}" y="11">Suhu</text><rect x="${L+58}" y="5" width="12" height="3" fill="${c("--heat")}"/><text x="${L+74}" y="11">Terasa</text><rect x="${L+126}" y="2" width="8" height="8" fill="${c("--rain")}" opacity=".75"/><text x="${L+138}" y="11">Hujan (maks ${rmax.toFixed(1)} mm)</text></g>`;
+  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Grafik suhu dan hujan">${leg}${g}</svg>`;
+}
+document.querySelectorAll(".seg button").forEach(b=>b.addEventListener("click",()=>{range=Number(b.dataset.d);document.querySelectorAll(".seg button").forEach(o=>o.setAttribute("aria-pressed",String(o===b)));renderHistory()}));
+$("dlRange").addEventListener("click",()=>{
+  const data=filtered();if(!data.length)return;
+  const blob=new Blob([toCSV(data)],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");const n=nowWita();
+  a.href=URL.createObjectURL(blob);a.download=`cuaca-mataram-${range?range+"hari":"semua"}-${n.getUTCFullYear()}${pad(n.getUTCMonth()+1)}${pad(n.getUTCDate())}.csv`;
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+});
+let rt;window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(rows.length)renderHistory()},200)});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(rows.length)renderHistory()});
+
+async function load(){
+  const bust="?t="+Math.floor(Date.now()/3e5);
+  try{const f=await (await fetch("data/forecast.json"+bust,{cache:"no-store"})).json();renderNow(f);renderStrip(f);renderDays(f)}
+  catch(e){$("updated").textContent="Data prakiraan belum tersedia. Jalankan workflow sekali dulu."}
+  try{const txt=await (await fetch("data/history.csv"+bust,{cache:"no-store"})).text();rows=parseCSV(txt).filter(r=>r.waktu_wita);renderHistory()}
+  catch(e){$("chart").innerHTML='<div class="empty">Riwayat belum tersedia.</div>'}
+}
+load();
+setInterval(()=>{if(!document.hidden)load()},10*60e3);
+})();
+</script>
+</body>
+</html>
