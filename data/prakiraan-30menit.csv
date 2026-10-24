@@ -1,6 +1,4 @@
 waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,arah_angin_deg,hembusan_kmh,awan_pct,tekanan_hpa,kode_cuaca,kondisi
-2026-10-24T10:30,30.9,36.2,60,0.1,72,10.9,158,29.9,54,1011.7,51,Gerimis ringan
-2026-10-24T11:00,31.6,37.0,57,0.1,98,10.4,169,29.9,51,1011.1,51,Gerimis ringan
 2026-10-24T11:30,31.7,37.0,57,0.1,98,11.5,179,30.6,51,1011.1,51,Gerimis ringan
 2026-10-24T12:00,31.5,36.5,58,0.1,100,13.0,184,32.0,65,1010.2,51,Gerimis ringan
 2026-10-24T12:30,31.0,35.6,59,0.2,100,14.4,184,34.2,65,1010.2,53,Gerimis
@@ -335,3 +333,5 @@ waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,a
 2026-10-31T09:00,29.1,33.6,71,0.0,13,11.8,123,28.8,40,1014.9,1,Cerah berawan
 2026-10-31T09:30,29.6,34.5,69,0.0,13,11.1,124,29.2,40,1014.9,1,Cerah berawan
 2026-10-31T10:00,30.1,35.4,66,0.0,27,10.3,125,29.5,43,1014.2,1,Cerah berawan
+2026-10-31T10:30,30.5,36.2,64,0.0,27,9.5,127,29.9,43,1014.2,1,Cerah berawan
+2026-10-31T11:00,31.0,36.9,61,0.0,42,8.4,130,30.2,45,1013.4,1,Cerah berawan
