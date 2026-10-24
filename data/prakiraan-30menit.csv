@@ -1,5 +1,4 @@
 waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,arah_angin_deg,hembusan_kmh,awan_pct,tekanan_hpa,kode_cuaca,kondisi
-2026-10-25T05:00,24.5,28.7,89,0.0,0,7.5,110,14.0,100,1011.0,3,Mendung
 2026-10-25T05:30,24.4,28.6,90,0.0,0,7.4,108,13.7,100,1011.0,3,Mendung
 2026-10-25T06:00,24.5,28.6,90,0.0,0,7.6,108,14.0,95,1011.6,3,Mendung
 2026-10-25T06:30,25.2,29.3,87,0.0,0,8.1,111,15.8,95,1011.6,3,Mendung
@@ -335,3 +334,4 @@ waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,a
 2026-11-01T03:30,25.1,29.9,93,0.0,1,9.0,127,25.2,5,1012.9,0,Cerah
 2026-11-01T04:00,25.5,30.1,91,0.0,0,9.8,128,25.9,5,1013.2,0,Cerah
 2026-11-01T04:30,25.9,30.3,89,0.0,0,10.8,128,27.0,5,1013.2,0,Cerah
+2026-11-01T05:00,26.3,30.5,87,0.0,0,11.8,129,28.1,7,1013.5,0,Cerah
