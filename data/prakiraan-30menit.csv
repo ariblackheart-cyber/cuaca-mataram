@@ -1,6 +1,4 @@
 waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,arah_angin_deg,hembusan_kmh,awan_pct,tekanan_hpa,kode_cuaca,kondisi
-2026-10-28T22:00,25.5,29.8,92,0.0,0,12.6,126,23.8,16,1014.4,0,Cerah
-2026-10-28T22:30,25.5,29.7,92,0.0,0,13.0,124,24.1,16,1014.4,1,Cerah berawan
 2026-10-28T23:00,25.4,29.5,92,0.0,0,13.1,122,24.5,48,1014.3,1,Cerah berawan
 2026-10-28T23:30,25.3,29.4,92,0.0,0,12.6,123,24.5,48,1014.3,2,Berawan sebagian
 2026-10-29T00:00,25.2,29.5,93,0.0,1,12.2,124,24.1,62,1013.9,2,Berawan sebagian
@@ -335,3 +333,5 @@ waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,a
 2026-11-04T20:30,27.0,31.7,86,0.0,65,12.1,122,34.6,13,1011.4,0,Cerah
 2026-11-04T21:00,26.8,31.4,88,0.0,55,12.4,121,33.5,20,1011.4,1,Cerah berawan
 2026-11-04T21:30,26.5,31.1,89,0.0,55,12.3,121,32.4,20,1011.4,1,Cerah berawan
+2026-11-04T22:00,26.1,30.8,91,0.0,44,12.0,120,31.3,31,1011.3,1,Cerah berawan
+2026-11-04T22:30,25.8,30.5,92,0.0,44,11.4,118,29.9,31,1011.3,1,Cerah berawan
