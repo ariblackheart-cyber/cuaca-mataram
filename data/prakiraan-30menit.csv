@@ -1,6 +1,4 @@
 waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,arah_angin_deg,hembusan_kmh,awan_pct,tekanan_hpa,kode_cuaca,kondisi
-2026-11-03T23:00,26.2,30.3,86,0.0,0,12.7,120,23.0,72,1014.2,2,Berawan sebagian
-2026-11-03T23:30,26.1,30.1,86,0.0,0,12.8,122,23.4,72,1014.2,2,Berawan sebagian
 2026-11-04T00:00,26.0,29.9,86,0.0,0,13.0,124,23.8,72,1013.5,2,Berawan sebagian
 2026-11-04T00:30,26.0,29.7,86,0.0,0,13.7,125,24.8,72,1013.5,2,Berawan sebagian
 2026-11-04T01:00,25.9,29.6,87,0.0,0,14.3,125,25.9,51,1012.9,2,Berawan sebagian
@@ -335,3 +333,5 @@ waktu_wita,suhu_c,terasa_c,kelembapan_pct,hujan_mm,peluang_hujan_pct,angin_kmh,a
 2026-11-10T21:30,25.5,30.3,90,0.1,85,7.5,114,20.5,18,1010.5,51,Gerimis ringan
 2026-11-10T22:00,25.2,30.0,91,0.1,72,6.9,110,19.8,29,1010.5,51,Gerimis ringan
 2026-11-10T22:30,24.9,29.8,92,0.1,72,6.3,105,19.1,29,1010.5,51,Gerimis ringan
+2026-11-10T23:00,24.6,29.5,94,0.1,60,5.7,101,18.4,44,1010.4,51,Gerimis ringan
+2026-11-10T23:30,24.3,29.3,95,0.1,60,5.1,94,17.6,44,1010.4,51,Gerimis ringan
