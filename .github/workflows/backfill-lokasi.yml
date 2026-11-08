@@ -1,0 +1,40 @@
+name: Isi riwayat 10 lokasi
+
+on:
+  workflow_dispatch:
+    inputs:
+      mulai:
+        description: "Isi riwayat 10 lokasi mulai tanggal (YYYY-MM-DD)"
+        default: "2023-01-01"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Ambil riwayat 10 lokasi (Open-Meteo)
+        run: python scripts/backfill_lokasi.py "${{ inputs.mulai }}"
+      - name: Simpan perubahan
+        run: |
+          git config user.name "cuaca-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/lokasi
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan."
+          else
+            git commit -m "Riwayat cuaca 10 lokasi mulai ${{ inputs.mulai }}"
+            git pull --rebase origin main
+            git push
+          fi
